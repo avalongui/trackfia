@@ -54,7 +54,7 @@ def calculate_pnl(portfolio, prices):
     return pnl
 
 def send_data_to_heroku(portfolio_data):
-    url = 'https://seu-app-no-heroku.herokuapp.com/update_data'
+    url = 'https://trackfia-3ae72ebff575.herokuapp.com/update_data'
     response = requests.post(url, json=portfolio_data)
     if response.status_code == 200:
         print("Data updated successfully on Heroku")
