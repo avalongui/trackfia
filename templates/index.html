@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio PnL</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .chart-container {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .chart {
+            display: inline-block;
+        }
+        .table-container {
+            width: 100%;
+        }
+        .info-table-container {
+            margin-top: 20px;
+        }
+        .container-custom {
+            display: flex;
+            justify-content: space-around;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Portfolio PnL</h1>
+        <div class="container-custom">
+            <div class="info-table-container">
+                {{ additional_table | safe }}
+            </div>
+        </div>
+        <div class="chart-container">
+            <div class="chart">
+                <img src="{{ chart1 }}" alt="Chart 1">
+            </div>
+        </div>
+        <div class="chart-container">
+            <div class="chart">
+                <img src="{{ chart2 }}" alt="Chart 2">
+            </div>
+        </div>
+        <div class="chart-container">
+            <div class="chart">
+                <img src="{{ chart3 }}" alt="Chart 3">
+            </div>
+        </div>
+        <h2 class="text-center">Dados da Carteira Atual</h2>
+        <div class="container-custom">
+            <div class="table-container">
+                {{ table | safe }}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
