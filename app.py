@@ -116,3 +116,6 @@ def index():
     df = df.apply(lambda x: round(x,2))
     
     enquadramento = df['Financeiro'].sum() / pl_fundo
+
+if __name__ == '__main__':
+    app.run(debug=True)
