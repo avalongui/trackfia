@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import numpy as np
@@ -117,5 +118,6 @@ def index():
     
     enquadramento = df['Financeiro'].sum() / pl_fundo
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
