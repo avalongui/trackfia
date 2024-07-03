@@ -54,11 +54,11 @@ def calculate_daily_change(prices_df):
     change = ((today - yesterday) / yesterday) * 100
     return change
 
-def calculate_portfolio_change(df):
+def calculate_portfolio_change_pm(df):
     initial_value = (df['average_price'] * df['quantity']).sum()
     current_value = df['current_value'].sum()
     portfolio_change = (current_value / initial_value) - 1
-    return portfolio_change
+    return portfolio_change * 100
 
 def dict_to_dataframe(data_dict):
     return pd.DataFrame.from_dict(data_dict)
@@ -72,7 +72,7 @@ def dict_to_dataframe_ts(data_dict):
 
 def get_last_monday(prices_df):
     today = datetime.now().date()
-    last_monday = today - timedelta(days=today.weekday())
+    last_monday = pd.to_datetime(today - timedelta(days=today.weekday()))
     
     if last_monday not in prices_df.index:
         last_monday = prices_df.index[prices_df.index <= last_monday][-1]
@@ -137,6 +137,9 @@ def index():
     weights = df['pcts_port'].values / 100
     
     df_var = pd.DataFrame({k: v['Fechamento'] for k,v in prices.items()}, columns=prices.keys())
+    # dates = prices[list(prices.keys())[0]]['Data']
+    df_var.index = pd.to_datetime(df_var.index)
+    
     portfolio_var_1_week = calculate_var(df_var, weights, 5)
     portfolio_var_1_month = calculate_var(df_var, weights, 21)
     
@@ -154,11 +157,11 @@ def index():
     df['VaR 1 semana'] = VaR_1_week
     df['VaR 1 mês'] = VaR_1_month
     
-    daily_change = calculate_daily_change(df_var)
+    
+    daily_change = calculate_daily_change(df_var) # variacao diaria de cada ativo
     chart3 = create_bar_chart(daily_change.to_frame(name='daily_change'), 'daily_change', "Variação Percentual dos Ativos Hoje")
 
-    portfolio_change = calculate_portfolio_change(df)
-
+    portfolio_change = calculate_portfolio_change_pm(df) # variacao com PM dos ativos
     portfolio_daily_change = calculate_portfolio_change(df_var, weights, 1)
     portfolio_weekly_change = calculate_weekly_change(df_var, weights)
 
@@ -172,8 +175,8 @@ def index():
     
     # Tabela de informações adicionais
     additional_info = pd.DataFrame({
-        'Informação': ['Enquadramento', 'Variação da Carteira desde Última Alocação', 'VaR 1 semana (95%)', 'VaR 1 mês (95%)', 'Variação Diária do Portfólio', 'Variação Semanal do Portfólio'],
-        'Valor': [f'{enquadramento:.2%}', f'{portfolio_change:.2%}', f'{portfolio_var_1_week[1]:.2f}%', f'{portfolio_var_1_month[1]:.2f}%', f'{portfolio_daily_change:.2f}%', f'{portfolio_weekly_change:.2f}%']
+        'Informação': ['Enquadramento', 'Variação da Carteira desde Última Alocação', 'Variação Diária do Portfólio', 'Variação Semanal do Portfólio', 'VaR 1 semana (95%)', 'VaR 1 mês (95%)'],
+        'Valor': [f'{enquadramento:.2%}', f'{portfolio_change:.2%}', f'{portfolio_daily_change:.2f}%', f'{portfolio_weekly_change:.2f}%', f'{portfolio_var_1_week[1]:.2f}%', f'{portfolio_var_1_month[1]:.2f}%']
     })
     
     
