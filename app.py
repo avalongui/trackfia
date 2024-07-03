@@ -81,7 +81,7 @@ def update_data():
 def index():
     global data_store
     if data_store is None:
-        return "No data available. Please update the data.", 200
+        return jsonify({"status": "error", "message": "No data available. Please update the data."}), 200
 
     prices = data_store["prices_full"]
     prices = {asset: dict_to_dataframe_ts(data_dict) for asset, data_dict in prices.items()}
@@ -127,6 +127,8 @@ def index():
     df = df.apply(lambda x: round(x,2))
     
     enquadramento = df['Financeiro'].sum() / pl_fundo
+    
+    return render_template("index.html", df=df, chart1=chart1, chart2=chart2, chart3=chart3, portfolio_change=portfolio_change, enquadramento=enquadramento)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
