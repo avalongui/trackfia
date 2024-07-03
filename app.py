@@ -70,18 +70,36 @@ def dict_to_dataframe_ts(data_dict):
    
     return df
 
+# @app.route('/update_data', methods=['POST'])
+# def update_data():
+#     global data_store
+#     data = request.get_json()
+#     data_store = data
+#     return jsonify({"status": "success", "message": "Data updated successfully"}), 200
+
 @app.route('/update_data', methods=['POST'])
 def update_data():
     global data_store
     data = request.get_json()
+    if data is None:
+        return jsonify({"status": "error", "message": "No JSON data received"}), 400
+    
     data_store = data
+    
+    print("Data received:")
+    print(data_store)
+    
     return jsonify({"status": "success", "message": "Data updated successfully"}), 200
+
 
 @app.route('/')
 def index():
     global data_store
     if data_store is None:
         return jsonify({"status": "error", "message": "No data available. Please update the data."}), 200
+
+    print("Current data_store:")
+    print(data_store)
 
     prices = data_store["prices_full"]
     prices = {asset: dict_to_dataframe_ts(data_dict) for asset, data_dict in prices.items()}
@@ -91,53 +109,50 @@ def index():
     df['percentage_change'] = df['percentage_change'] * 100
     df['impact'] = df['percentage_change'] * df['pcts_port'] / 100
     
-    
-    print(df)
-    
-    # chart1 = create_bar_chart(df, 'percentage_change', "Variação da Carteira por Preço Médio")
-    # chart2 = create_bar_chart(df, 'impact', "Impacto da Variação na Carteira")
+    chart1 = create_bar_chart(df, 'percentage_change', "Variação da Carteira por Preço Médio")
+    chart2 = create_bar_chart(df, 'impact', "Impacto da Variação na Carteira")
 
-    # weights = df['pcts_port'].values / 100
+    weights = df['pcts_port'].values / 100
     
-    # df_var = pd.DataFrame({k: v['Fechamento'] for k,v in prices.items()}, columns=prices.keys())
-    # portfolio_var_1_week = calculate_var(df_var, weights, 5)
-    # portfolio_var_1_month = calculate_var(df_var, weights, 21)
+    df_var = pd.DataFrame({k: v['Fechamento'] for k,v in prices.items()}, columns=prices.keys())
+    portfolio_var_1_week = calculate_var(df_var, weights, 5)
+    portfolio_var_1_month = calculate_var(df_var, weights, 21)
     
-    # VaR_1_week = []
-    # VaR_1_month = []
-    # tickers = list(df.index)
-    # for ticker in tickers:
-    #     individual_returns = np.log(1 + df_var[ticker].pct_change())
-    #     individual_std_dev = individual_returns.std() * np.sqrt(252)
-    #     var_1_week = individual_std_dev * norm.ppf(0.95) * np.sqrt(5 / 252)
-    #     var_1_month = individual_std_dev * norm.ppf(0.95) * np.sqrt(21 / 252)
-    #     VaR_1_week.append(var_1_week * 100)  # Convertendo para porcentagem
-    #     VaR_1_month.append(var_1_month * 100)
+    VaR_1_week = []
+    VaR_1_month = []
+    tickers = list(df.index)
+    for ticker in tickers:
+        individual_returns = np.log(1 + df_var[ticker].pct_change())
+        individual_std_dev = individual_returns.std() * np.sqrt(252)
+        var_1_week = individual_std_dev * norm.ppf(0.95) * np.sqrt(5 / 252)
+        var_1_month = individual_std_dev * norm.ppf(0.95) * np.sqrt(21 / 252)
+        VaR_1_week.append(var_1_week * 100)  # Convertendo para porcentagem
+        VaR_1_month.append(var_1_month * 100)
  
-    # df['VaR 1 semana'] = VaR_1_week
-    # df['VaR 1 mês'] = VaR_1_month
+    df['VaR 1 semana'] = VaR_1_week
+    df['VaR 1 mês'] = VaR_1_month
     
-    # daily_change = calculate_daily_change(df_var)
-    # chart3 = create_bar_chart(daily_change.to_frame(name='daily_change'), 'daily_change', "Variação Percentual dos Ativos Hoje")
+    daily_change = calculate_daily_change(df_var)
+    chart3 = create_bar_chart(daily_change.to_frame(name='daily_change'), 'daily_change', "Variação Percentual dos Ativos Hoje")
 
-    # portfolio_change = calculate_portfolio_change(df)
+    portfolio_change = calculate_portfolio_change(df)
 
-    # # Atualizacao final para apresentacao do quadro
-    # df = df.sort_values(by='pcts_port', ascending=False)
-    # df.columns = ['Preço', 'Quantidade', 'PM', 'Financeiro', 'PnL', 'Variação', 'Peso', 'Variação ponderada',
-    #               'VaR semanal', 'VaR mensal']
-    # df = df.apply(lambda x: round(x,2))
+    # Atualizacao final para apresentacao do quadro
+    df = df.sort_values(by='pcts_port', ascending=False)
+    df.columns = ['Preço', 'Quantidade', 'PM', 'Financeiro', 'PnL', 'Variação', 'Peso', 'Variação ponderada',
+                  'VaR semanal', 'VaR mensal']
+    df = df.apply(lambda x: round(x,2))
     
-    # enquadramento = df['Financeiro'].sum() / pl_fundo
+    enquadramento = df['Financeiro'].sum() / pl_fundo
     
-    # # Tabela de informações adicionais
-    # additional_info = pd.DataFrame({
-    #     'Informação': ['Enquadramento', 'Variação da Carteira desde Última Alocação', 'VaR 1 semana (95%)', 'VaR 1 mês (95%)'],
-    #     'Valor': [f'{enquadramento:.2%}', f'{portfolio_change:.2%}', f'{portfolio_var_1_week[1]:.2f}%', f'{portfolio_var_1_month[1]:.2f}%']
-    # })
+    # Tabela de informações adicionais
+    additional_info = pd.DataFrame({
+        'Informação': ['Enquadramento', 'Variação da Carteira desde Última Alocação', 'VaR 1 semana (95%)', 'VaR 1 mês (95%)'],
+        'Valor': [f'{enquadramento:.2%}', f'{portfolio_change:.2%}', f'{portfolio_var_1_week[1]:.2f}%', f'{portfolio_var_1_month[1]:.2f}%']
+    })
     
     
-    # return render_template('index.html', chart1=chart1, chart2=chart2, chart3=chart3, table=df.to_html(classes='table table-striped table-bordered', border=0), additional_table=additional_info.to_html(classes='table table-striped table-bordered', index=False, header=True))
+    return render_template('index.html', chart1=chart1, chart2=chart2, chart3=chart3, table=df.to_html(classes='table table-striped table-bordered', border=0), additional_table=additional_info.to_html(classes='table table-striped table-bordered', index=False, header=True))
 
 
 if __name__ == "__main__":
