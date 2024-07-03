@@ -58,7 +58,7 @@ def calculate_portfolio_change_pm(df):
     initial_value = (df['average_price'] * df['quantity']).sum()
     current_value = df['current_value'].sum()
     portfolio_change = (current_value / initial_value) - 1
-    return portfolio_change * 100
+    return portfolio_change 
 
 def dict_to_dataframe(data_dict):
     return pd.DataFrame.from_dict(data_dict)
