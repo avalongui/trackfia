@@ -59,6 +59,9 @@ def calculate_portfolio_change(df):
     portfolio_change = (current_value / initial_value) - 1
     return portfolio_change
 
+def dict_to_dataframe(data_dict):
+    return pd.DataFrame.from_dict(data_dict)
+
 @app.route('/update_data', methods=['POST'])
 def update_data():
     global data_store
@@ -72,11 +75,10 @@ def index():
     if data_store is None:
         return "No data available. Please update the data.", 200
 
-    pnl = pd.DataFrame(data_store["pnl"])
     prices = data_store["prices_full"]
+    prices = {asset: dict_to_dataframe(data_dict) for asset, data_dict in prices.items()}
 
-
-    df = pd.DataFrame.from_dict(pnl, orient='index')
+    df = pd.DataFrame.from_dict(data_store["pnl"], orient='index')
     df['pcts_port'] = (df['current_value'] / np.sum(df['current_value'])) * 100
     df['percentage_change'] = df['percentage_change'] * 100
     df['impact'] = df['percentage_change'] * df['pcts_port'] / 100

@@ -61,14 +61,19 @@ def send_data_to_heroku(portfolio_data):
     else:
         print("Failed to update data on Heroku:", response.text)
 
+def dataframe_to_dict(df):
+    return df.reset_index().to_dict(orient='records')
+
 def main():
     portfolio, df = run_manager_xml()
     last_prices, prices_full = get_real_time_prices(portfolio)
     pnl = calculate_pnl(portfolio, last_prices)
+    
+    prices_full_dict = {asset: dataframe_to_dict(df) for asset, df in prices_full.items()}
  
     portfolio_data = {
         "pnl": pnl,
-        "prices_full": prices_full
+        "prices_full": prices_full_dict
     }
     
     send_data_to_heroku(portfolio_data)
