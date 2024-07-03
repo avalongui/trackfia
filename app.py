@@ -6,6 +6,7 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -85,10 +86,6 @@ def update_data():
         return jsonify({"status": "error", "message": "No JSON data received"}), 400
     
     data_store = data
-    
-    print("Data received:")
-    print(data_store)
-    
     return jsonify({"status": "success", "message": "Data updated successfully"}), 200
 
 
@@ -98,8 +95,10 @@ def index():
     if data_store is None:
         return jsonify({"status": "error", "message": "No data available. Please update the data."}), 200
 
-    print("Current data_store:")
-    print(data_store)
+    # print("Current data_store:")
+    # print(data_store)
+    
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     prices = data_store["prices_full"]
     prices = {asset: dict_to_dataframe_ts(data_dict) for asset, data_dict in prices.items()}
@@ -152,8 +151,7 @@ def index():
     })
     
     
-    return render_template('index.html', chart1=chart1, chart2=chart2, chart3=chart3, table=df.to_html(classes='table table-striped table-bordered', border=0), additional_table=additional_info.to_html(classes='table table-striped table-bordered', index=False, header=True))
-
+    return render_template('index.html', chart1=chart1, chart2=chart2, chart3=chart3, table=df.to_html(classes='table table-striped table-bordered', border=0), additional_table=additional_info.to_html(classes='table table-striped table-bordered', index=False, header=True), current_time=current_time)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
