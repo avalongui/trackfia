@@ -17,6 +17,11 @@ def update_data():
     print("Data received:")
     print(data_store)
     
+    data_store = data
+    
+    print("Data received:")
+    print(data_store)
+    
     return jsonify({"status": "success", "message": "Data updated successfully"}), 200
 
 @app.route('/')
