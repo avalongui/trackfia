@@ -108,7 +108,7 @@ def update_data():
         return jsonify({"status": "error", "message": "No JSON data received"}), 400
     
     data_store = data
-    current_time = data.get('current_time')
+    # current_time = data.get('current_time')
     return jsonify({"status": "success", "message": "Data updated successfully"}), 200
 
 
@@ -121,7 +121,7 @@ def index():
     # print("Current data_store:")
     # print(data_store)
     
-    # current_time = data_store['current_time'] # hora em que dados foram enviados ao sistema
+    current_time = data_store['current_time'] # hora em que dados foram enviados ao sistema
 
     prices = data_store["prices_full"]
     prices = {asset: dict_to_dataframe_ts(data_dict) for asset, data_dict in prices.items()}
