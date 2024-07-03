@@ -128,7 +128,15 @@ def index():
     
     enquadramento = df['Financeiro'].sum() / pl_fundo
     
-    return render_template("index.html", df=df, chart1=chart1, chart2=chart2, chart3=chart3, portfolio_change=portfolio_change, enquadramento=enquadramento)
+    # Tabela de informações adicionais
+    additional_info = pd.DataFrame({
+        'Informação': ['Enquadramento', 'Variação da Carteira desde Última Alocação', 'VaR 1 semana (95%)', 'VaR 1 mês (95%)'],
+        'Valor': [f'{enquadramento:.2%}', f'{portfolio_change:.2%}', f'{portfolio_var_1_week[1]:.2f}%', f'{portfolio_var_1_month[1]:.2f}%']
+    })
+    
+    
+    return render_template('index.html', chart1=chart1, chart2=chart2, chart3=chart3, table=df.to_html(classes='table table-striped table-bordered', border=0), additional_table=additional_info.to_html(classes='table table-striped table-bordered', index=False, header=True))
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
