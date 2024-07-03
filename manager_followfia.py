@@ -8,7 +8,7 @@ from io import BytesIO
 import base64
 import requests
 
-from app.mt5_connect import *
+from mt5_connect import *
 from manager import *
 
 mt5_path = Path('C:/', 'Program Files', 'MetaTrader 5', 'terminal64.exe')

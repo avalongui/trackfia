@@ -83,6 +83,16 @@ def index():
     if data_store is None:
         return jsonify({"status": "error", "message": "No data available. Please update the data."}), 200
 
+    if data_store:
+        file_path = os.path.join('/tmp', data_store.filename)
+        data_store.save(file_path)
+        
+        with open(file_path, 'r') as f:
+            content = f.read()
+        
+        print("File content:")
+        print(content)
+
     prices = data_store["prices_full"]
     prices = {asset: dict_to_dataframe_ts(data_dict) for asset, data_dict in prices.items()}
 
