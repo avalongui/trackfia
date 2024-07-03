@@ -82,10 +82,13 @@ def main():
     pnl = calculate_pnl(portfolio, last_prices)
     
     prices_full_dict = {asset: dataframe_to_dict_ts(df) for asset, df in prices_full.items()}
- 
+    
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
     portfolio_data = {
         "pnl": pnl,
-        "prices_full": prices_full_dict
+        "prices_full": prices_full_dict,
+        "current_time": current_time
     }
     
     url = 'https://trackfia-3ae72ebff575.herokuapp.com/update_data'

@@ -6,7 +6,7 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
@@ -64,12 +64,34 @@ def dict_to_dataframe(data_dict):
     return pd.DataFrame.from_dict(data_dict)
 
 def dict_to_dataframe_ts(data_dict):
-
     data_dict['Data'] = [pd.to_datetime(i) for i in data_dict['Data']]
     df = pd.DataFrame.from_dict(data_dict)
     df.set_index('Data', inplace=True)
    
     return df
+
+def get_last_monday(prices_df):
+    today = datetime.now().date()
+    last_monday = today - timedelta(days=today.weekday())
+    
+    if last_monday not in prices_df.index:
+        last_monday = prices_df.index[prices_df.index <= last_monday][-1]
+    
+    return last_monday
+
+def calculate_weekly_change(prices_df, weights):
+    last_monday = get_last_monday(prices_df)
+    prices_last_monday = prices_df.loc[last_monday]
+    prices_today = prices_df.iloc[-1]
+    weekly_returns = np.log(prices_today / prices_last_monday)
+    portfolio_weekly_change = (weekly_returns * weights).sum() * 100  
+    return portfolio_weekly_change
+
+def calculate_portfolio_change(prices_df, weights, days):
+    returns = np.log(prices_df / prices_df.shift(1)).dropna()
+    weighted_returns = returns * weights
+    portfolio_change = weighted_returns.sum(axis=1).iloc[-days:].sum() * 100  
+    return portfolio_change
 
 # @app.route('/update_data', methods=['POST'])
 # def update_data():
@@ -86,19 +108,20 @@ def update_data():
         return jsonify({"status": "error", "message": "No JSON data received"}), 400
     
     data_store = data
+    current_time = data.get('current_time')
     return jsonify({"status": "success", "message": "Data updated successfully"}), 200
 
 
 @app.route('/')
 def index():
-    global data_store
+    global data_store, current_time
     if data_store is None:
         return jsonify({"status": "error", "message": "No data available. Please update the data."}), 200
 
     # print("Current data_store:")
     # print(data_store)
     
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # current_time = data_store['current_time'] # hora em que dados foram enviados ao sistema
 
     prices = data_store["prices_full"]
     prices = {asset: dict_to_dataframe_ts(data_dict) for asset, data_dict in prices.items()}
@@ -136,6 +159,9 @@ def index():
 
     portfolio_change = calculate_portfolio_change(df)
 
+    portfolio_daily_change = calculate_portfolio_change(df_var, weights, 1)
+    portfolio_weekly_change = calculate_weekly_change(df_var, weights)
+
     # Atualizacao final para apresentacao do quadro
     df = df.sort_values(by='pcts_port', ascending=False)
     df.columns = ['Preço', 'Quantidade', 'PM', 'Financeiro', 'PnL', 'Variação', 'Peso', 'Variação ponderada',
@@ -146,8 +172,8 @@ def index():
     
     # Tabela de informações adicionais
     additional_info = pd.DataFrame({
-        'Informação': ['Enquadramento', 'Variação da Carteira desde Última Alocação', 'VaR 1 semana (95%)', 'VaR 1 mês (95%)'],
-        'Valor': [f'{enquadramento:.2%}', f'{portfolio_change:.2%}', f'{portfolio_var_1_week[1]:.2f}%', f'{portfolio_var_1_month[1]:.2f}%']
+        'Informação': ['Enquadramento', 'Variação da Carteira desde Última Alocação', 'VaR 1 semana (95%)', 'VaR 1 mês (95%)', 'Variação Diária do Portfólio', 'Variação Semanal do Portfólio'],
+        'Valor': [f'{enquadramento:.2%}', f'{portfolio_change:.2%}', f'{portfolio_var_1_week[1]:.2f}%', f'{portfolio_var_1_month[1]:.2f}%', f'{portfolio_daily_change:.2f}%', f'{portfolio_weekly_change:.2f}%']
     })
     
     
