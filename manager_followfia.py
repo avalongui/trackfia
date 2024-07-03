@@ -64,12 +64,21 @@ def send_data_to_heroku(portfolio_data):
 def dataframe_to_dict(df):
     return df.reset_index().to_dict(orient='records')
 
+def dataframe_to_dict_ts(df):
+    # Convert all datetime-like columns to strings
+    df = df.copy()
+    df.reset_index(inplace=True)
+    for column in df.columns:
+        if np.issubdtype(df[column].dtype, np.datetime64):
+            df[column] = df[column].astype(str)
+    return df.to_dict(orient='list')
+
 def main():
     portfolio, df = run_manager_xml()
     last_prices, prices_full = get_real_time_prices(portfolio)
     pnl = calculate_pnl(portfolio, last_prices)
     
-    prices_full_dict = {asset: dataframe_to_dict(df) for asset, df in prices_full.items()}
+    prices_full_dict = {asset: dataframe_to_dict_ts(df) for asset, df in prices_full.items()}
  
     portfolio_data = {
         "pnl": pnl,

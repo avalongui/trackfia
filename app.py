@@ -62,6 +62,14 @@ def calculate_portfolio_change(df):
 def dict_to_dataframe(data_dict):
     return pd.DataFrame.from_dict(data_dict)
 
+def dict_to_dataframe_ts(data_dict):
+
+    data_dict['Data'] = [pd.to_datetime(i) for i in data_dict['Data']]
+    df = pd.DataFrame.from_dict(data_dict)
+    df.set_index('Data', inplace=True)
+   
+    return df
+
 @app.route('/update_data', methods=['POST'])
 def update_data():
     global data_store
@@ -76,7 +84,7 @@ def index():
         return "No data available. Please update the data.", 200
 
     prices = data_store["prices_full"]
-    prices = {asset: dict_to_dataframe(data_dict) for asset, data_dict in prices.items()}
+    prices = {asset: dict_to_dataframe_ts(data_dict) for asset, data_dict in prices.items()}
 
     df = pd.DataFrame.from_dict(data_store["pnl"], orient='index')
     df['pcts_port'] = (df['current_value'] / np.sum(df['current_value'])) * 100
