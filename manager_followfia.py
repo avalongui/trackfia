@@ -74,6 +74,7 @@ def dataframe_to_dict_ts(df):
     return df.to_dict(orient='list')
 
 def main():
+    
     portfolio, df = run_manager_xml()
     last_prices, prices_full = get_real_time_prices(portfolio)
     pnl = calculate_pnl(portfolio, last_prices)
@@ -86,6 +87,7 @@ def main():
     }
     
     send_data_to_heroku(portfolio_data)
+    
 
 if __name__ == '__main__':
     main()

@@ -1,4 +1,55 @@
 import os
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+data_store = None
+
+@app.route('/update_data', methods=['POST'])
+def update_data():
+    global data_store
+    data = request.get_json()
+    if data is None:
+        return jsonify({"status": "error", "message": "No JSON data received"}), 400
+    
+    data_store = data
+    
+    print("Data received:")
+    print(data_store)
+    
+    return jsonify({"status": "success", "message": "Data updated successfully"}), 200
+
+@app.route('/')
+def index():
+    global data_store
+    if data_store is None:
+        return jsonify({"status": "error", "message": "No data available. Please update the data."}), 200
+
+    return jsonify({"status": "success", "data": data_store}), 200
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+
+
+
+
+
+import os
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import numpy as np
@@ -83,16 +134,6 @@ def index():
     if data_store is None:
         return jsonify({"status": "error", "message": "No data available. Please update the data."}), 200
 
-    if data_store:
-        file_path = os.path.join('/tmp', data_store.filename)
-        data_store.save(file_path)
-        
-        with open(file_path, 'r') as f:
-            content = f.read()
-        
-        print("File content:")
-        print(content)
-
     prices = data_store["prices_full"]
     prices = {asset: dict_to_dataframe_ts(data_dict) for asset, data_dict in prices.items()}
 
@@ -151,3 +192,5 @@ def index():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+    
+    """
