@@ -1,54 +1,3 @@
-import requests
-import json
-
-url = 'https://trackfia-3ae72ebff575.herokuapp.com/update_data'
-
-portfolio_data = {
-    "pnl": {
-        "ABEV3": {"current_price": 13.0, "quantity": 100, "average_price": 12.5, "current_value": 1300.0, "profit_loss": 50.0, "percentage_change": 0.04},
-        "PETR4": {"current_price": 22.0, "quantity": 50, "average_price": 20.0, "current_value": 1100.0, "profit_loss": 100.0, "percentage_change": 0.1}
-    },
-    "prices_full": {
-        "ABEV3": {
-            "Data": ["2023-01-01", "2023-01-02"],
-            "Abertura": [12.5, 13.0],
-            "Maxima": [13.0, 13.5],
-            "Minima": [12.0, 12.5],
-            "Fechamento": [13.0, 13.0],
-            "Volume_Financeiro": [100000, 150000]
-        },
-        "PETR4": {
-            "Data": ["2023-01-01", "2023-01-02"],
-            "Abertura": [20.0, 21.0],
-            "Maxima": [22.0, 23.0],
-            "Minima": [19.0, 20.0],
-            "Fechamento": [22.0, 22.0],
-            "Volume_Financeiro": [200000, 250000]
-        }
-    }
-}
-
-response = requests.post(url, json=portfolio_data)
-
-if response.status_code == 200:
-    print("Data updated successfully on Heroku")
-else:
-    print("Failed to update data on Heroku:", response.text)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
 from flask import Flask, request, jsonify, render_template
 import pandas as pd
 import numpy as np
@@ -58,6 +7,8 @@ import matplotlib.pyplot as plt
 from io import BytesIO
 import base64
 import requests
+import json
+
 
 from mt5_connect import *
 from manager import *
@@ -137,9 +88,15 @@ def main():
         "prices_full": prices_full_dict
     }
     
-    send_data_to_heroku(portfolio_data)
+    url = 'https://trackfia-3ae72ebff575.herokuapp.com/update_data'
+
+    response = requests.post(url, json=portfolio_data)
+
+    if response.status_code == 200:
+        print("Data updated successfully on Heroku")
+    else:
+        print("Failed to update data on Heroku:", response.text)
     
 
 if __name__ == '__main__':
     main()
-"""
