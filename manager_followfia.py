@@ -75,8 +75,7 @@ def dataframe_to_dict_ts(df):
             df[column] = df[column].astype(str)
     return df.to_dict(orient='list')
 
-def main():
-    
+def job():
     portfolio, df = run_manager_xml()
     last_prices, prices_full = get_real_time_prices(portfolio)
     pnl = calculate_pnl(portfolio, last_prices)
@@ -100,7 +99,17 @@ def main():
         print("Data updated successfully on Heroku")
     else:
         print("Failed to update data on Heroku:", response.text)
+
+
+def main():
+    schedule.every(5).minutes.do(job)
     
+    while True:
+        now = datetime.now()
+        if now.hour >= 9 and now.minute >= 30 or now.hour > 9:
+            if now.hour < 18:
+                schedule.run_pending()
+        time.sleep(1)
 
 if __name__ == '__main__':
     main()
