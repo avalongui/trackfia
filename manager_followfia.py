@@ -18,7 +18,7 @@ initialize(user_path=str(mt5_path), server='XPMT5-DEMO', login=52276888, key='Cg
 
 app = Flask(__name__)
 
-pl_fundo = 1_450_000.00
+pl_fundo = 1_542_000.00
 
 def get_real_time_prices(portfolio):
     prices_full = {}
@@ -88,7 +88,8 @@ def main():
     portfolio_data = {
         "pnl": pnl,
         "prices_full": prices_full_dict,
-        "current_time": current_time
+        "current_time": current_time,
+        "current_pl": pl_fundo
     }
     
     url = 'https://trackfia-3ae72ebff575.herokuapp.com/update_data'

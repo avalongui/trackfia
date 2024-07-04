@@ -9,10 +9,7 @@ import base64
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
-
 data_store = None
-pl_fundo = 1_450_000.00
-
 
 def create_bar_chart(df, column, title):
     df = df.sort_values(by=column, ascending=False)
@@ -121,6 +118,8 @@ def index():
     # print("Current data_store:")
     # print(data_store)
     
+    pl_fundo = data_store['current_time']
+    
     current_time = data_store['current_time'] # hora em que dados foram enviados ao sistema
 
     prices = data_store["prices_full"]
@@ -171,7 +170,7 @@ def index():
                   'VaR semanal', 'VaR mensal']
     df = df.apply(lambda x: round(x,2))
     
-    enquadramento = df['Financeiro'].sum() / pl_fundo
+    enquadramento = df['Financeiro'].sum() / data_store['current_pl']
     
     # Tabela de informações adicionais
     additional_info = pd.DataFrame({
