@@ -19,7 +19,7 @@ def create_combined_bar_chart(df, columns, title):
     bar_width = 0.35
     index = np.arange(len(df))
     
-    bars1 = ax.bar(index - bar_width/2, df[columns[0]], bar_width, label='retorno (%)', color='#00008B')
+    bars1 = ax.bar(index - bar_width/2, df[columns[0]], bar_width, label='retorno (%)', color='#1f77b4')
     bars2 = ax.bar(index + bar_width/2, df[columns[1]], bar_width, label='pesos (%)', color='#D3D3D3')
     
     ax.set_title(title)
