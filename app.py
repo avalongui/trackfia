@@ -16,25 +16,25 @@ def create_combined_bar_chart(df, columns, title):
     df = df.sort_values(by=columns[0], ascending=False)
     fig, ax = plt.subplots(figsize=(14, 7))
     
-    bar_width = 0.4
+    bar_width = 0.35
     index = np.arange(len(df))
     
-    bars1 = ax.bar(index, df[columns[0]], bar_width, label='return (%)', color='#00008B')
-    bars2 = ax.bar(index + bar_width, df[columns[1]], bar_width, label='weights (%)', color='#D3D3D3')
+    bars1 = ax.bar(index - bar_width/2, df[columns[0]], bar_width, label='retorno (%)', color='#00008B')
+    bars2 = ax.bar(index + bar_width/2, df[columns[1]], bar_width, label='pesos (%)', color='#D3D3D3')
     
     ax.set_title(title)
-    ax.set_xticks(index + bar_width / 2)
+    ax.set_xticks(index)
     ax.set_xticklabels(df.index, rotation=45, ha='right')
     
     ax.legend()
 
     for bar in bars1:
         yval = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f}%', ha='center', va='bottom', fontsize=5)
+        ax.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f}', ha='center', va='bottom', fontsize=7)
 
     for bar in bars2:
         yval = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f}%', ha='center', va='bottom', fontsize=5)
+        ax.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f}', ha='center', va='bottom', fontsize=7)
 
     plt.tight_layout()
     
@@ -43,7 +43,6 @@ def create_combined_bar_chart(df, columns, title):
     data = base64.b64encode(buf.getbuffer()).decode("ascii")
     
     return f"data:image/png;base64,{data}"
-
 
 def create_bar_chart(df, column, title):
     df = df.sort_values(by=column, ascending=False)
