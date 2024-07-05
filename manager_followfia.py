@@ -21,7 +21,7 @@ initialize(user_path=str(mt5_path), server='XPMT5-DEMO', login=52276888, key='Cg
 
 app = Flask(__name__)
 
-pl_fundo = 1_542_000.00
+pl_fundo = 1_700_000.00
 
 def get_real_time_prices(portfolio):
     prices_full = {}

@@ -11,6 +11,38 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 data_store = None
 
+
+def create_combined_bar_chart(df, column1, column2, title):
+    df = df.sort_values(by=column1, ascending=False)
+    fig, ax = plt.subplots(figsize=(14, 5))
+    bar_width = 0.35
+    index = np.arange(len(df))
+
+    colors1 = ['#00008B' if x > 0 else '#FF4500' for x in df[column1]]
+    colors2 = ['#00BFFF' for _ in df[column2]]
+    
+    bars1 = ax.bar(index, df[column1], bar_width, color=colors1, label=column1)
+    bars2 = ax.bar(index + bar_width, df[column2], bar_width, color=colors2, label=column2)
+    
+    ax.set_title(title)
+    ax.set_xticks(index + bar_width / 2)
+    ax.set_xticklabels(df.index, rotation=45)
+    ax.legend()
+    
+    for bar in bars1:
+        yval = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width() / 2, yval, f'{yval:.2f}%', ha='center', va='bottom', fontsize=7)
+        
+    for bar in bars2:
+        yval = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width() / 2, yval, f'{yval:.2f}%', ha='center', va='bottom', fontsize=7)
+
+    buf = BytesIO()
+    plt.savefig(buf, format="png", bbox_inches='tight')
+    data = base64.b64encode(buf.getbuffer()).decode("ascii")
+    
+    return f"data:image/png;base64,{data}"
+
 def create_bar_chart(df, column, title):
     df = df.sort_values(by=column, ascending=False)
     fig, ax = plt.subplots(figsize=(14, 5))
@@ -130,11 +162,12 @@ def index():
     df['percentage_change'] = df['percentage_change'] * 100
     df['impact'] = df['percentage_change'] * df['pcts_port'] / 100
     
-    chart1 = create_bar_chart(df, 'percentage_change', "Variação da Carteira por Preço Médio")
-    chart2 = create_bar_chart(df, 'impact', "Impacto da Variação na Carteira")
-
     weights = df['pcts_port'].values / 100
     
+    chart1 = create_combined_bar_chart(df, 'percentage_change', 'pcts_port', "Variação da Carteira por Preço Médio")
+    # chart1 = create_bar_chart(df, 'percentage_change', "Variação da Carteira por Preço Médio")
+    chart2 = create_bar_chart(df, 'impact', "Impacto da Variação na Carteira")
+
     df_var = pd.DataFrame({k: v['Fechamento'] for k,v in prices.items()}, columns=prices.keys())
     # dates = prices[list(prices.keys())[0]]['Data']
     df_var.index = pd.to_datetime(df_var.index)
