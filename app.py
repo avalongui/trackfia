@@ -291,7 +291,7 @@ def index():
     portfolio_weekly_change = calculate_weekly_change(df_var, weights)
 
     # Atualizacao final para apresentacao do quadro
-    df = df.sort_values(by='pcts_port', ascending=False)
+    df = df.sort_values(by='profit_loss', ascending=False)
     df.columns = ['Preço', 'Quantidade', 'PM', 'Financeiro', 'PnL', 'Variação', 'Peso', 'Variação ponderada',
                   'VaR semanal', 'VaR mensal']
     df = df.apply(lambda x: round(x,2))
