@@ -275,7 +275,7 @@ def index():
     df['VaR 1 semana'] = VaR_1_week
     df['VaR 1 mês'] = VaR_1_month
     
-    enquadramento = df['Financeiro'].sum()  / pl_fundo
+    enquadramento = df['current_value'].sum()  / pl_fundo
     data_dados = pd.to_datetime(data_store['data']).strftime('%d/%m/%Y')
     cota_fia = data_store['cota']
     a_receber = data_store['receber']
@@ -298,8 +298,11 @@ def index():
     
     # Tabela de informações adicionais
     additional_info = pd.DataFrame({
-        'Informação': ['Enquadramento', 'Variação da Carteira desde Última Alocação', 'Variação Diária do Portfólio', 'Variação Semanal do Portfólio', 'VaR 1 semana (95%)', 'VaR 1 mês (95%)'],
-        'Valor': [f'{enquadramento:.2%}', f'{portfolio_change:.2%}', f'{portfolio_daily_change:.2f}%', f'{portfolio_weekly_change:.2f}%', f'{portfolio_var_1_week[1]:.2f}%', f'{portfolio_var_1_month[1]:.2f}%']
+        'Informação': ['Referência API', 'PL', 'Cota', 'A receber', 'A pagar', 'Enquadramento', 'Variação da Carteira desde Última Alocação', 'Variação Diária do Portfólio', 
+                       'Variação Semanal do Portfólio', 'VaR 1 semana (95%)', 'VaR 1 mês (95%)'],
+        
+    'Valor': [f'{data_dados}', f'R$ {pl_fundo:,.2f}', f'{cota_fia}', f'R$ {a_receber:,.2f}', f'R$ {a_pagar:,.2f}', f'{enquadramento:.2%}', f'{portfolio_change:.2%}', f'{portfolio_daily_change:.2f}%', f'{portfolio_weekly_change:.2f}%', 
+                  f'{portfolio_var_1_week[1]:.2f}%', f'{portfolio_var_1_month[1]:.2f}%']
     })
     
     
