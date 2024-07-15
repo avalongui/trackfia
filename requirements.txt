@@ -4,3 +4,4 @@ numpy
 scipy
 matplotlib
 requests
+flask-login
