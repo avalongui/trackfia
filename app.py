@@ -120,18 +120,20 @@ def create_combined_bar_chart(df, columns, title):
 
 def create_bar_chart(df, column, title):
     df = df.sort_values(by=column, ascending=False)
-    fig, ax = plt.subplots(figsize=(14, 5))
-    colors = ['#00008B' if x > 0 else '#FF4500' for x in df[column]]
+    fig, ax = plt.subplots(figsize=(16, 8))  # Aumentar o tamanho da figura
+    colors = ['#1f77b4' if x > 0 else '#FF4500' for x in df[column]]
     
     bars = ax.bar(df.index, df[column], color=colors, width=0.8)
     
-    ax.set_title(title)
+    ax.set_title(title, fontsize=16)
     ax.tick_params(axis='x', rotation=45)
     
     for bar in bars:
         yval = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f}%', ha='center', va='bottom', fontsize=7)
+        ax.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f}', ha='center', va='bottom', fontsize=9)
 
+    plt.tight_layout()
+    
     buf = BytesIO()
     plt.savefig(buf, format="png", bbox_inches='tight')
     data = base64.b64encode(buf.getbuffer()).decode("ascii")
