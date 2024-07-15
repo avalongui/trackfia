@@ -1,5 +1,6 @@
 import os
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, redirect, url_for, request, jsonify, flash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import pandas as pd
 import numpy as np
 from scipy.stats import norm
@@ -11,18 +12,57 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 data_store = None
 
+app.config['SECRET_KEY'] = 'Avalon@123'
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id
+
+users = {'admin': {'password': 'Avalon@123'}}
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User(user_id)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    print("Login page accessed")
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        print(f"Attempting login with username: {username} and password: {password}")
+        if username in users and users[username]['password'] == password:
+            user = User(username)
+            login_user(user)
+            print("Login successful")
+            return redirect(url_for('index'))
+        else:
+            print("Login failed")
+            flash('Invalid username or password', 'error')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
 
 def create_combined_bar_chart(df, columns, title):
-    df = df.sort_values(by=columns[0], ascending=False)
-    fig, ax = plt.subplots(figsize=(14, 7))
+    df = df.sort_values(by=columns[1], ascending=False)
+    fig, ax = plt.subplots(figsize=(16, 8))  # Aumentar o tamanho da figura
     
-    bar_width = 0.35
+    bar_width = 0.25  # Reduzir a largura das barras para aumentar o espaçamento
     index = np.arange(len(df))
     
     bars1 = ax.bar(index - bar_width/2, df[columns[0]], bar_width, label='retorno (%)', color='#1f77b4')
     bars2 = ax.bar(index + bar_width/2, df[columns[1]], bar_width, label='pesos (%)', color='#D3D3D3')
     
-    ax.set_title(title)
+    ax.set_title(title, fontsize=16)
     ax.set_xticks(index)
     ax.set_xticklabels(df.index, rotation=45, ha='right')
     
@@ -30,11 +70,11 @@ def create_combined_bar_chart(df, columns, title):
 
     for bar in bars1:
         yval = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f}', ha='center', va='bottom', fontsize=7)
+        ax.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f}', ha='center', va='bottom', fontsize=9)
 
     for bar in bars2:
         yval = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f}', ha='center', va='bottom', fontsize=7)
+        ax.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f}', ha='center', va='bottom', fontsize=9)
 
     plt.tight_layout()
     
@@ -43,6 +83,40 @@ def create_combined_bar_chart(df, columns, title):
     data = base64.b64encode(buf.getbuffer()).decode("ascii")
     
     return f"data:image/png;base64,{data}"
+
+
+# def create_combined_bar_chart(df, columns, title):
+#     df = df.sort_values(by=columns[0], ascending=False)
+#     fig, ax = plt.subplots(figsize=(14, 7))
+    
+#     bar_width = 0.35
+#     index = np.arange(len(df))
+    
+#     bars1 = ax.bar(index - bar_width/2, df[columns[0]], bar_width, label='retorno (%)', color='#1f77b4')
+#     bars2 = ax.bar(index + bar_width/2, df[columns[1]], bar_width, label='pesos (%)', color='#D3D3D3')
+    
+#     ax.set_title(title)
+#     ax.set_xticks(index)
+#     ax.set_xticklabels(df.index, rotation=45, ha='right')
+    
+#     ax.legend()
+
+#     for bar in bars1:
+#         yval = bar.get_height()
+#         ax.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f}', ha='center', va='bottom', fontsize=7)
+
+#     for bar in bars2:
+#         yval = bar.get_height()
+#         ax.text(bar.get_x() + bar.get_width()/2, yval, f'{yval:.2f}', ha='center', va='bottom', fontsize=7)
+
+#     plt.tight_layout()
+    
+#     buf = BytesIO()
+#     plt.savefig(buf, format="png", bbox_inches='tight')
+#     data = base64.b64encode(buf.getbuffer()).decode("ascii")
+    
+#     return f"data:image/png;base64,{data}"
+
 
 def create_bar_chart(df, column, title):
     df = df.sort_values(by=column, ascending=False)
@@ -64,6 +138,7 @@ def create_bar_chart(df, column, title):
     
     return f"data:image/png;base64,{data}"
 
+
 def calculate_var(prices, weights, time_ahead):
     returns = np.log(1 + prices.pct_change())
     historical_returns = (returns * weights).sum(axis=1)
@@ -78,11 +153,13 @@ def calculate_var(prices, weights, time_ahead):
     
     return VaRs
 
+
 def calculate_daily_change(prices_df):
     today = prices_df.iloc[-1]
     yesterday = prices_df.iloc[-2]
     change = ((today - yesterday) / yesterday) * 100
     return change
+
 
 def calculate_portfolio_change_pm(df):
     initial_value = (df['average_price'] * df['quantity']).sum()
@@ -90,8 +167,10 @@ def calculate_portfolio_change_pm(df):
     portfolio_change = (current_value / initial_value) - 1
     return portfolio_change 
 
+
 def dict_to_dataframe(data_dict):
     return pd.DataFrame.from_dict(data_dict)
+
 
 def dict_to_dataframe_ts(data_dict):
     data_dict['Data'] = [pd.to_datetime(i) for i in data_dict['Data']]
@@ -99,6 +178,7 @@ def dict_to_dataframe_ts(data_dict):
     df.set_index('Data', inplace=True)
    
     return df
+
 
 def get_last_monday(prices_df):
     today = datetime.now().date()
@@ -109,6 +189,7 @@ def get_last_monday(prices_df):
     
     return last_monday
 
+
 def calculate_weekly_change(prices_df, weights):
     last_monday = get_last_monday(prices_df)
     prices_last_monday = prices_df.loc[last_monday]
@@ -117,11 +198,13 @@ def calculate_weekly_change(prices_df, weights):
     portfolio_weekly_change = (weekly_returns * weights).sum() * 100  
     return portfolio_weekly_change
 
+
 def calculate_portfolio_change(prices_df, weights, days):
     returns = np.log(prices_df / prices_df.shift(1)).dropna()
     weighted_returns = returns * weights
     portfolio_change = weighted_returns.sum(axis=1).iloc[-days:].sum() * 100  
     return portfolio_change
+
 
 # @app.route('/update_data', methods=['POST'])
 # def update_data():
@@ -129,6 +212,7 @@ def calculate_portfolio_change(prices_df, weights, days):
 #     data = request.get_json()
 #     data_store = data
 #     return jsonify({"status": "success", "message": "Data updated successfully"}), 200
+
 
 @app.route('/update_data', methods=['POST'])
 def update_data():
@@ -143,6 +227,7 @@ def update_data():
 
 
 @app.route('/')
+@login_required
 def index():
     global data_store, current_time
     if data_store is None:
@@ -151,7 +236,7 @@ def index():
     # print("Current data_store:")
     # print(data_store)
     
-    pl_fundo = data_store['current_time']
+    pl_fundo = data_store['current_pl']
     
     current_time = data_store['current_time'] # hora em que dados foram enviados ao sistema
 
@@ -190,6 +275,11 @@ def index():
     df['VaR 1 semana'] = VaR_1_week
     df['VaR 1 mês'] = VaR_1_month
     
+    enquadramento = df['Financeiro'].sum()  / pl_fundo
+    data_dados = pd.to_datetime(data_store['data']).strftime('%d/%m/%Y')
+    cota_fia = data_store['cota']
+    a_receber = data_store['receber']
+    a_pagar = data_store['pagar']
     
     daily_change = calculate_daily_change(df_var) # variacao diaria de cada ativo
     chart3 = create_bar_chart(daily_change.to_frame(name='daily_change'), 'daily_change', "Variação Percentual dos Ativos Hoje")

@@ -1,3 +1,4 @@
+import os
 import schedule
 import time
 from datetime import datetime
@@ -11,8 +12,9 @@ from io import BytesIO
 import base64
 import requests
 import json
+import pickle
 
-
+from api_btg import fund_data
 from mt5_connect import *
 from manager import *
 
@@ -21,7 +23,7 @@ initialize(user_path=str(mt5_path), server='XPMT5-DEMO', login=52276888, key='Cg
 
 app = Flask(__name__)
 
-pl_fundo = 1_700_000.00
+# pl_fundo = 1_700_000.00
 
 def get_real_time_prices(portfolio):
     prices_full = {}
@@ -78,20 +80,63 @@ def dataframe_to_dict_ts(df):
             df[column] = df[column].astype(str)
     return df.to_dict(orient='list')
 
+def save_pickle(data, path):
+    with open(path, 'wb') as file:
+        pickle.dump(data, file)
+
+def load_pickle(path):
+    with open(path, 'rb') as file:
+        return pickle.load(file)
+    
+
 def job():
+    
+    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    
     portfolio, df = run_manager_xml()
     last_prices, prices_full = get_real_time_prices(portfolio)
     pnl = calculate_pnl(portfolio, last_prices)
     
+    # Caminho para os arquivos pickle
+    pickle_dir = Path(Path.home(), 'Documents', 'GitHub', 'database', 'dados_api')
+    df_xml_path = os.path.join(pickle_dir, f'df_xml_{current_date}.pkl')
+    data_xml_path = os.path.join(pickle_dir, f'data_xml_{current_date}.pkl')
+    header_path = os.path.join(pickle_dir, f'header_{current_date}.pkl')
+    
+    # Verifica se os arquivos pickle do dia já existem
+    if os.path.exists(df_xml_path) and os.path.exists(data_xml_path) and os.path.exists(header_path):
+        df_xml = load_pickle(df_xml_path)
+        data_xml = load_pickle(data_xml_path)
+        header = load_pickle(header_path)
+        print('Dados carregados dos arquivos serializados.')
+    else:
+        df_xml, data_xml, header = fund_data(find_type='xml')
+        save_pickle(df_xml, df_xml_path)
+        save_pickle(data_xml, data_xml_path)
+        save_pickle(header, header_path)
+        print('Dados capturados da API e salvos em arquivos serializados.')
+    
+    data_api = header['dtposicao']
+    print(f'Data dos dados capturados da API: {data_api}')
+    
     prices_full_dict = {asset: dataframe_to_dict_ts(df) for asset, df in prices_full.items()}
     
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    pl_fundo = header['patliq']
+    data_dados = pd.to_datetime(header['dtposicao']).strftime('%d/%m/%Y')
+    cota_fia = header['valorcota']
+    a_receber = header['valorreceber']
+    a_pagar = header['valorpagar']
     
     portfolio_data = {
-        "pnl": pnl,
-        "prices_full": prices_full_dict,
-        "current_time": current_time,
-        "current_pl": pl_fundo
+        'pnl': pnl,
+        'prices_full': prices_full_dict,
+        'current_time': current_time,
+        'current_pl': pl_fundo,
+        'data': data_dados,
+        'cota': cota_fia,
+        'receber': a_receber,
+        'pagar': a_pagar
     }
     
     url = 'https://trackfia-3ae72ebff575.herokuapp.com/update_data'
