@@ -75,6 +75,7 @@ def run_manager_xml():
     df['ticker'] = df['ticker'].str.strip()
     df.reset_index(inplace=True, drop=True)
     
+    df = df.sort_values('data')
     portfolio, df = calculate_PnL_averagePrices(df)
     
     return portfolio, df
@@ -94,9 +95,8 @@ def run_manager_brokerage_notes():
     df['ticker'] = df['ticker'].str.strip()
     df.reset_index(inplace=True, drop=True)
     
+    df = df.sort_values('data')
     portfolio, df = calculate_PnL_averagePrices(df)
     
     return portfolio, df
-
-
 

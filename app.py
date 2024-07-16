@@ -296,14 +296,15 @@ def index():
                   'VaR semanal', 'VaR mensal']
     df = df.apply(lambda x: round(x,2))
     
+    posicao_acoes = df['Financeiro'].sum()
     enquadramento = df['Financeiro'].sum() / data_store['current_pl']
-    
+
     # Tabela de informações adicionais
     additional_info = pd.DataFrame({
-        'Informação': ['Referência API', 'PL', 'Cota', 'A receber', 'A pagar', 'Enquadramento', 'Variação da Carteira desde Última Alocação', 'Variação Diária do Portfólio', 
+        'Informação': ['Referência API', 'PL', 'Posição Ações', 'Cota', 'A receber', 'A pagar', 'Enquadramento', 'Variação da Carteira desde Última Alocação', 'Variação Diária do Portfólio', 
                        'Variação Semanal do Portfólio', 'VaR 1 semana (95%)', 'VaR 1 mês (95%)'],
         
-    'Valor': [f'{data_dados}', f'R$ {pl_fundo:,.2f}', f'{cota_fia}', f'R$ {a_receber:,.2f}', f'R$ {a_pagar:,.2f}', f'{enquadramento:.2%}', f'{portfolio_change:.2%}', f'{portfolio_daily_change:.2f}%', f'{portfolio_weekly_change:.2f}%', 
+    'Valor': [f'{data_dados}', f'R$ {pl_fundo:,.2f}', f'R$ {posicao_acoes:,.2f}', f'{cota_fia}', f'R$ {a_receber:,.2f}', f'R$ {a_pagar:,.2f}', f'{enquadramento:.2%}', f'{portfolio_change:.2%}', f'{portfolio_daily_change:.2f}%', f'{portfolio_weekly_change:.2f}%', 
                   f'{portfolio_var_1_week[1]:.2f}%', f'{portfolio_var_1_month[1]:.2f}%']
     })
     
