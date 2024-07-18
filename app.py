@@ -141,6 +141,51 @@ def create_bar_chart(df, column, title):
     return f"data:image/png;base64,{data}"
 
 
+def create_histReturns_bar_chart(df, title):
+    """
+    Cria um gráfico de barras horizontal combinado para múltiplas séries de dados.
+    
+    :param df: DataFrame contendo os dados com colunas 'Retorno Diário (%)', 'Retorno Semanal (%)', 'Retorno Mensal (%)'
+    :param title: Título do gráfico
+    :return: String codificada em base64 representando a imagem do gráfico
+    """
+    df = df.sort_values(by='Retorno Diário (%)', ascending=True)  # Ordenar para melhor visualização
+    fig, ax = plt.subplots(figsize=(16, 12))  # Aumentar o tamanho da figura
+    
+    bar_width = 0.7  # Largura das barras
+    index = np.arange(len(df)) * 2.6  # Espaçamento entre as barras
+    
+    colors = ['#00416A', '#6495ED', '#000000']
+    
+    bars1 = ax.barh(index - bar_width, df['Retorno Diário (%)'], bar_width, label='Retorno Diário (%)', color=colors[0], alpha=0.8)
+    bars2 = ax.barh(index, df['Retorno Semanal (%)'], bar_width, label='Retorno Semanal (%)', color=colors[1], alpha=0.8)
+    bars3 = ax.barh(index + bar_width, df['Retorno Mensal (%)'], bar_width, label='Retorno Mensal (%)', color=colors[2], alpha=0.8)
+    
+    ax.set_title(title, fontsize=16)
+    ax.set_yticks(index)
+    ax.set_yticklabels(df.index, fontsize=12)
+    # ax.set_xlabel('Variação (%)', fontsize=12)
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+    
+    ax.legend(loc='upper left', bbox_to_anchor=(1, 1), fontsize=12)
+
+    for bars in [bars1, bars2, bars3]:
+        for bar in bars:
+            width = bar.get_width()
+            if width > 0:
+                ax.text(width, bar.get_y() + bar.get_height()/2, f'{width:.2f}', ha='left', va='center', fontsize=8)
+            else:
+                ax.text(width, bar.get_y() + bar.get_height()/2, f'{width:.2f}', ha='right', va='center', fontsize=8)
+
+    plt.tight_layout()
+    
+    buf = BytesIO()
+    plt.savefig(buf, format="png", bbox_inches='tight')
+    data = base64.b64encode(buf.getbuffer()).decode("ascii")
+    
+    return f"data:image/png;base64,{data}"
+
+
 def calculate_var(prices, weights, time_ahead):
     returns = np.log(1 + prices.pct_change())
     historical_returns = (returns * weights).sum(axis=1)
@@ -191,7 +236,6 @@ def get_last_monday(prices_df):
     
     return last_monday
 
-
 def calculate_weekly_change(prices_df, weights):
     last_monday = get_last_monday(prices_df)
     prices_last_monday = prices_df.loc[last_monday]
@@ -200,6 +244,28 @@ def calculate_weekly_change(prices_df, weights):
     portfolio_weekly_change = (weekly_returns * weights).sum() * 100  
     return portfolio_weekly_change
 
+def calculate_weeklyAssets_change(prices_df):
+    last_monday = get_last_monday(prices_df)
+    prices_last_monday = prices_df.loc[last_monday]
+    prices_today = prices_df.iloc[-1]
+    weekly_returns = np.log(prices_today / prices_last_monday) * 100
+    return weekly_returns
+
+def get_first_day_of_month(prices_df):
+    today = datetime.now().date()
+    first_day_of_month = pd.to_datetime(today.replace(day=1))
+    
+    if first_day_of_month not in prices_df.index:
+        first_day_of_month = prices_df.index[prices_df.index <= first_day_of_month][-1]
+    
+    return first_day_of_month
+
+def calculate_monthlyAssets_change(prices_df):
+    first_day_of_month = get_first_day_of_month(prices_df)
+    prices_first_day = prices_df.loc[first_day_of_month]
+    prices_today = prices_df.iloc[-1]
+    monthly_returns = np.log(prices_today / prices_first_day) * 100
+    return monthly_returns
 
 def calculate_portfolio_change(prices_df, weights, days):
     returns = np.log(prices_df / prices_df.shift(1)).dropna()
@@ -283,8 +349,19 @@ def index():
     a_receber = data_store['receber']
     a_pagar = data_store['pagar']
     
-    daily_change = calculate_daily_change(df_var) # variacao diaria de cada ativo
-    chart3 = create_bar_chart(daily_change.to_frame(name='daily_change'), 'daily_change', "Variação Percentual dos Ativos Hoje")
+    daily_change = calculate_daily_change(df_var)  # Variacao diaria de cada ativo
+    weekly_change = calculate_weeklyAssets_change(df_var)  # Variacao semanal de cada ativo
+    monthly_change = calculate_monthlyAssets_change(df_var)  # Variacao mensal de cada ativo
+    
+    # Combinar dados de variações em um DataFrame
+    change_df = pd.DataFrame({
+        'Retorno Diário (%)': daily_change,
+        'Retorno Semanal (%)': weekly_change,
+        'Retorno Mensal (%)': monthly_change
+    })
+
+    # Criar gráfico combinado
+    chart3 = create_histReturns_bar_chart(change_df, "Variação Percentual dos Ativos")
 
     portfolio_change = calculate_portfolio_change_pm(df) # variacao com PM dos ativos
     portfolio_daily_change = calculate_portfolio_change(df_var, weights, 1)
