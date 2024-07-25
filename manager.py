@@ -11,7 +11,6 @@ from pathlib import Path
 from tqdm import tqdm
 import pandas as pd
 
-from leitor_notas import *
 from leitor_xml import *
 
 
