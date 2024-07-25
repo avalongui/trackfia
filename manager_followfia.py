@@ -397,6 +397,7 @@ def handle_data_Mainwebpage(manual_insert=[]):
     
     # Preparar dados para envio
     portfolio_data = {
+        'current_time': current_time,
         'data': data_dados,
         'current_pl': pl_fundo,
         'cota': cota_fia,

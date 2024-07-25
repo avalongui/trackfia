@@ -346,7 +346,7 @@ def index():
                        table=df_chart_usage.to_html(classes='table table-striped table-bordered', border=0), 
                        options_table=df_opts_table.to_html(classes='table table-striped table-bordered', border=0),
                        additional_table=additional_info.to_html(classes='table table-striped table-bordered', index=False, header=True), 
-                       current_time=current_time)
+                       current_time=data_store['current_time'])
     
 
     
