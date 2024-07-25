@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operações Manuais</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Operações Manuais</h1>
+        <form method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Upload Excel (XLSX)</label>
+                <input type="file" class="form-control" id="file" name="file" accept=".xlsx" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+        
+        {% if manual_operations_table %}
+            <h2 class="mt-4">Resultados do Excel</h2>
+            <div class="table-responsive">
+                {{ manual_operations_table|safe }}
+            </div>
+        {% endif %}
+
+        {% if chart1 %}
+            <h2 class="mt-4">Variação da Carteira por Preço Médio x Peso do Ativo na Carteira</h2>
+            <img src="{{ chart1 }}" class="img-fluid" alt="Gráfico 1">
+        {% endif %}
+
+        {% if chart3 %}
+            <h2 class="mt-4">Variação Percentual dos Ativos</h2>
+            <img src="{{ chart3 }}" class="img-fluid" alt="Gráfico 3">
+        {% endif %}
+
+        {% if chart4 %}
+            <h2 class="mt-4">Impacto Financeiro das Opções nas Datas de Vencimento</h2>
+            <img src="{{ chart4 }}" class="img-fluid" alt="Gráfico 4">
+        {% endif %}
+
+        {% if table %}
+            <h2 class="mt-4">Tabela de Posições</h2>
+            <div class="table-responsive">
+                {{ table|safe }}
+            </div>
+        {% endif %}
+
+        {% if options_table %}
+            <h2 class="mt-4">Operações com Opções</h2>
+            <div class="table-responsive">
+                {{ options_table|safe }}
+            </div>
+        {% endif %}
+
+        {% if additional_table %}
+            <h2 class="mt-4">Informações Adicionais</h2>
+            <div class="table-responsive">
+                {{ additional_table|safe }}
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

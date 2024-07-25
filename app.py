@@ -350,7 +350,116 @@ def index():
                        current_time=time_web)
     
 
-    
+@app.route('/manual_operations', methods=['GET', 'POST'])
+@login_required
+def manual_operations():
+
+    if request.method == 'POST':
+        manual_insert = None
+
+        if 'file' in request.files and request.files['file'].filename != '':
+            file = request.files['file']
+            if file and file.filename.endswith('.xlsx'):
+                df_manual_operations = pd.read_excel(file)
+
+                # Filtrar operações executadas
+                df_manual_operations = df_manual_operations[df_manual_operations.Status == 'Executada']
+                data_manual = []
+                for index in df_manual_operations.index:
+                    row = df_manual_operations.loc[index]
+
+                    pos = row.Lado
+                    nome_cia = 'manual'
+                    quantidade = row['Qtd Executada']
+                    preco = row['Preço']
+                    financeiro = quantidade * preco
+                    ticker = row.Ativo
+                    data = pd.to_datetime(row['Data Validade'])
+
+                    data_manual.append({
+                        'pos': pos,
+                        'nome_cia': nome_cia,
+                        'quantidade': quantidade,
+                        'preco': preco,
+                        'financeiro': financeiro,
+                        'ticker': ticker,
+                        'data': data,
+                        'P&L': 0.0,
+                        'average_price': 0.0
+                    })
+
+                manual_insert = pd.DataFrame.from_dict(data_manual)
+
+        # Enviar dados para a função que processa e atualiza a página manual_operations localmente
+        response = requests.post('http://192.168.0.13:5000/process_manual_operations', json=manual_insert.to_dict(orient='records') if manual_insert is not None else {})
+
+        if response.status_code == 200:
+            
+            data_store = response.json()
+            flash('File processed successfully', 'success')
+            
+            time_web = data_store['current_time']
+            data_dados = pd.to_datetime(data_store['data']).strftime('%d/%m/%Y')
+            pl_fundo = data_store['current_pl']
+            cota_fia = data_store['cota']
+            a_receber = data_store['receber']
+            a_pagar = data_store['pagar']
+            enquadramento = data_store['enquadramento']
+            limits_der = data_store['limits_der']
+            portfolio_change = data_store['portfolio_change']
+            portfolio_change_stocks = data_store['portfolio_change_stocks']
+            portfolio_daily_change = data_store['portfolio_daily_change']
+            portfolio_weekly_change = data_store['portfolio_weekly_change']
+            portfolio_var_1_week = data_store['portfolio_var_1_week']
+            portfolio_var_1_month = data_store['portfolio_var_1_month']
+          
+            # Tabela de informações adicionais
+            additional_info = pd.DataFrame({
+                'Informação': ['Referência API', 'PL', 'Cota', 'A receber', 'A pagar', 'Enquadramento', 'Limites (Derivativos)',
+                               'Variação Portfólio RV (PM)', 'Variação Portfólio Ações (PM)',
+                               'Variação Diária do Portfólio RV', 
+                               'Variação Semanal do Portfólio RV', 'VaR 1 semana (95%)', 'VaR 1 mês (95%)'],
+                
+            'Valor': [f'{data_dados}', f'R$ {pl_fundo:,.2f}', f'{cota_fia}', f'R$ {a_receber:,.2f}', f'R$ {a_pagar:,.2f}', 
+                      f'{enquadramento:.2%}', f'{limits_der:.2%}',  f'{portfolio_change:.2%}', f'{portfolio_change_stocks:.2%}', 
+                      f'{portfolio_daily_change:.2f}%', f'{portfolio_weekly_change:.2f}%', f'{portfolio_var_1_week[1]:.2f}%', 
+                      f'{portfolio_var_1_month[1]:.2f}%']
+            })
+
+            # Processar os dados retornados para renderização
+            df_stocks = pd.DataFrame.from_dict(data_store['df_stocks_dict'])
+            df_stocks.set_index('index', inplace=True)
+
+            change_df = pd.DataFrame.from_dict(data_store['change_df_dict'])
+            change_df.set_index('index', inplace=True)
+
+            impact_by_date = {pd.to_datetime(k): v for k, v in data_store['impact_by_date'].items()}
+
+            df_chart_usage = pd.DataFrame.from_dict(data_store['df_chart_usage'])
+            df_opts_table = pd.DataFrame.from_dict(data_store['df_opts_table'])
+
+            # Variacao da carteira e pesos dos ativos
+            chart1 = create_combined_bar_chart(df_stocks, ['percentage_change', 'pcts_port'], "Variação da Carteira por Preço Médio x Peso do Ativo na Carteira")
+
+            # Histograma de retornos individuais
+            chart3 = create_histReturns_bar_chart(change_df, "Variação Percentual dos Ativos")
+
+            # Impactos das posicoes de opcoes
+            chart4 = create_options_impact_chart(impact_by_date, 'Impacto Financeiro das Opções nas Datas de Vencimento')
+
+            return render_template('manual_operations.html',
+                                   chart1=chart1, chart3=chart3, chart4=chart4,
+                                   table=df_chart_usage.to_html(classes='table table-striped table-bordered', border=0),
+                                   options_table=df_opts_table.to_html(classes='table table-striped table-bordered', border=0),
+                                   additional_table=portfolio_data['additional_info'].to_html(classes='table table-striped table-bordered', index=False, header=True),
+                                   current_time=time_web)
+        else:
+            flash('Failed to process file', 'error')
+
+    return render_template('manual_operations.html', current_time=current_time)
+
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)

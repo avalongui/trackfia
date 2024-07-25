@@ -31,64 +31,30 @@
             display: flex;
             justify-content: center;
         }
-        .button-container {
-            text-align: left;
-            margin-bottom: 20px;
-        }
-        .options-title {
-            margin-top: 40px;
-            margin-bottom: 10px;
-            text-align: center;
-            font-size: 24px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="current-time">{{ current_time }}</div>
-        
-        <div class="button-container">
-            <a href="{{ url_for('manual_operations') }}" class="btn btn-secondary">Operações Manuais</a>
-        </div>
-        
         <h1 class="text-center"> Avalon FRM </h1>
-        
         <div class="container-custom">
             <div class="info-table-container">
                 {{ additional_table | safe }}
             </div>
         </div>
-        
         <div class="chart-container">
             <div class="chart">
                 <img src="{{ chart1 }}" alt="Chart 1">
             </div>
-        </div>
-        
         <div class="chart-container">
             <div class="chart">
                 <img src="{{ chart3 }}" alt="Chart 3">
             </div>
         </div>
-        
-        <div class="chart-container">
-            <div class="chart">
-                <img src="{{ chart4 }}" alt="Chart 4">
-            </div>
-        </div>
-        
-        <h2 class="options-title">Posições em Ações</h2>
-        
+        <h2 class="text-center">Dados da Carteira Atual</h2>
         <div class="container-custom">
             <div class="table-container">
                 {{ table | safe }}
-            </div>
-        </div>
-        
-        <div class="container-custom">
-            <div class="table-container">
-                <h2 class="options-title">Posições em Opções</h2>
-                {{ options_table | safe }}
             </div>
         </div>
     </div>

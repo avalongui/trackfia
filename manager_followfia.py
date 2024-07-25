@@ -13,6 +13,8 @@ import base64
 import requests
 import json
 import pickle
+from flask import Flask, render_template, redirect, url_for, request, jsonify, flash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 from api_btg import fund_data
 from mt5_connect import *
@@ -437,52 +439,23 @@ def job():
         print("Failed to update data on Heroku:", response.text)
 
 
-@app.route('/process_file', methods=['POST'])
-def process_file():
-    if 'file' not in request.files:
-        return jsonify({"status": "error", "message": "No file part"}), 400
+@app.route('/process_manual_operations', methods=['POST'])
+def process_manual_operations():
+    
+    manual_insert = request.get_json()
 
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"status": "error", "message": "No selected file"}), 400
+    if manual_insert:
+        manual_insert = pd.DataFrame.from_dict(manual_insert)
+    else:
+        manual_insert = []
 
-    if file and file.filename.endswith('.xlsx'):
-        df_manual_operations = pd.read_excel(file)
-
-        # Filtrar operações executadas
-        df_manual_operations = df_manual_operations[df_manual_operations.Status == 'Executada']
-        data_manual = []
-        for index in df_manual_operations.index:
-            row = df_manual_operations.loc[index]
-
-            pos = row.Lado
-            nome_cia = 'manual'
-            quantidade = row['Qtd Executada']
-            preco = row['Preço']
-            financeiro = quantidade * preco
-            ticker = row.Ativo
-            data = pd.to_datetime(row['Data Validade'])
-
-            data_manual.append({
-                'pos': pos,
-                'nome_cia': nome_cia,
-                'quantidade': quantidade,
-                'preco': preco,
-                'financeiro': financeiro,
-                'ticker': ticker,
-                'data': data,
-                'P&L': 0.0,
-                'average_price': 0.0
-            })
-
-        manual_insert = pd.DataFrame.from_dict(data_manual)
+    if len(manual_insert) == 0:
+        print('Houve um problema no recebimento dos dados...')
+        return None
+    else:
         portfolio_data = handle_data_Mainwebpage(manual_insert=manual_insert)
+        return jsonify(portfolio_data)
 
-        # Retorne os novos dados processados para o servidor web
-        return jsonify(portfolio_data), 200
-
-    return jsonify({"status": "error", "message": "Invalid file type"}), 400
-        
 
 def main():
     schedule.every(5).minutes.do(job)
