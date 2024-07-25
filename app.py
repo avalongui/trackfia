@@ -292,7 +292,7 @@ def index():
     if data_store is None:
         return jsonify({"status": "error", "message": "No data available. Please update the data."}), 200
     
-    current_time = data_store['current_time']
+    time_web = data_store['current_time']
     data_dados = pd.to_datetime(data_store['data']).strftime('%d/%m/%Y')
     pl_fundo = data_store['current_pl']
     cota_fia = data_store['cota']
@@ -347,7 +347,7 @@ def index():
                        table=df_chart_usage.to_html(classes='table table-striped table-bordered', border=0), 
                        options_table=df_opts_table.to_html(classes='table table-striped table-bordered', border=0),
                        additional_table=additional_info.to_html(classes='table table-striped table-bordered', index=False, header=True), 
-                       current_time=current_time)
+                       current_time=time_web)
     
 
     
