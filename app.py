@@ -389,6 +389,7 @@ def manual_operations():
                     })
 
                 manual_insert = pd.DataFrame.from_dict(data_manual)
+                manual_insert['data'] = manual_insert['data'].astype(str)
 
         # Enviar dados para a função que processa e atualiza a página manual_operations localmente
         response = requests.post('http://192.168.0.13:5000/process_manual_operations', json=manual_insert.to_dict(orient='records') if manual_insert is not None else {})
