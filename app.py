@@ -456,7 +456,7 @@ def manual_operations():
         else:
             flash('Failed to process file', 'error')
 
-    return render_template('manual_operations.html', current_time=current_time)
+    return render_template('manual_operations.html', current_time=time_web)
 
 
 
