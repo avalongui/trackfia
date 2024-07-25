@@ -72,6 +72,26 @@ def calculate_PnL_averagePrices(df):
     return portfolio, df
 
 
+def first_pos_fia():
+    first_positions = Path(Path.home(), 'Documents', 'GitHub', 'database', 'Carteira_AVALON_FIA_21_06_2024.xlsx')
+    df_firstpos = pd.read_excel(first_positions)
+    
+    # Selecionar ativos e precos
+    loc_stocks = list(df_firstpos[df_firstpos.iloc[:,0]=='Departamento'].index)[0]
+    stocks_df = df_firstpos.iloc[loc_stocks + 1:].dropna(how='all').reset_index(drop=True)
+    loc_end = list(stocks_df[stocks_df.iloc[:,0]=='Compromissada Over'].index)[0]
+    stocks_df = stocks_df.iloc[0:loc_end,:]
+    
+    stocks_df = stocks_df.iloc[:, 3:7]
+    stocks_df.columns = ['ticker', 'quantidade', 'preco', 'financeiro']
+    stocks_df['pos'] = 'C'
+    stocks_df['data'] = pd.to_datetime('2021-06-21')
+    stocks_df['nome_cia'] = 'first_ops'
+    stocks_df = stocks_df[['pos', 'nome_cia', 'quantidade', 'preco', 'financeiro', 'ticker', 'data']]
+    
+    return stocks_df
+
+
 def run_manager_xml():
     
     df_firstpos = first_pos_fia()
