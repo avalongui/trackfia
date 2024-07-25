@@ -5,3 +5,4 @@ scipy
 matplotlib
 requests
 flask-login
+Flask-Limiter
