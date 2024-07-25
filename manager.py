@@ -18,50 +18,59 @@ from leitor_xml import *
 
 
 def calculate_PnL_averagePrices(df):
-    
     portfolio = {}
     df['P&L'] = 0.0
     df['average_price'] = 0.0
     
     for index, row in df.iterrows():
-        
         ticker = row['ticker']
         quantity = row['quantidade']
         price = row['preco']
         financial = quantity * price
         date = row['data']
-    
-        if row['pos'] == 'C':
-            if ticker not in portfolio:
-                portfolio[ticker] = {'quantity': 0, 'total_cost': 0}
-            
-            # Update quantity and total cost
+
+        # Inicializar o ticker no portfólio, se não existir
+        if ticker not in portfolio:
+            if len(ticker) <= 6:
+                portfolio[ticker] = {'flag': 1, 'quantity': 0, 'total_cost': 0, 'average_price': 0.0}  # 1 para ação
+            elif len(ticker) >= 7:
+                portfolio[ticker] = {'flag': 2, 'quantity': 0, 'total_cost': 0, 'average_price': 0.0}  # 2 para opção
+
+        portfolio[ticker]['short_sellig'] = 0 # nao e short selling
+        
+        if row['pos'] == 'C':  # Compra
+            # Atualizar dados
             portfolio[ticker]['quantity'] += quantity
             portfolio[ticker]['total_cost'] += financial
             
-            # Calculate average price
-            average_price = portfolio[ticker]['total_cost'] / portfolio[ticker]['quantity']
-            df.at[index, 'average_price'] = average_price
-            portfolio[ticker]['average_price'] = average_price
+            # PM
+            portfolio[ticker]['average_price'] = portfolio[ticker]['total_cost'] / portfolio[ticker]['quantity']
+            df.at[index, 'average_price'] = portfolio[ticker]['average_price']
         
-        elif row['pos'] == 'V':
-            
-            if ticker in portfolio and portfolio[ticker]['quantity'] > 0:
-                
-                # Calculate average price and P&L for the sale
-                average_price = portfolio[ticker]['total_cost'] / portfolio[ticker]['quantity']
-                pnl = (financial - (average_price * quantity))
+        elif row['pos'] == 'V':  # Venda
+            if portfolio[ticker]['quantity'] > 0:  # Venda de posição comprada (long)
+                # Preco e PnL
+                average_price = portfolio[ticker]['average_price']
+                pnl = (price - average_price) * quantity
                 df.at[index, 'P&L'] = pnl
                 
-                # Update quantity and total cost
+                # Atualizar dados
                 portfolio[ticker]['quantity'] -= quantity
                 portfolio[ticker]['total_cost'] -= average_price * quantity
                 
-                # If completely sold, update the average price to P&L
+                # Se venda completa, resetar PM
                 if portfolio[ticker]['quantity'] == 0:
-                    df.at[index, 'average_price'] = 0
-                else:
-                    df.at[index, 'average_price'] = average_price
+                    portfolio[ticker]['average_price'] = 0.0
+                df.at[index, 'average_price'] = portfolio[ticker]['average_price']
+            else:  # Short selling
+                portfolio[ticker]['short_sellig'] = 1
+            
+                portfolio[ticker]['quantity'] -= quantity  # Incrementa posição short (quantidade negativa)
+                portfolio[ticker]['total_cost'] += financial  # Atualiza o custo total com valor positivo
+                
+                # PM
+                portfolio[ticker]['average_price'] = portfolio[ticker]['total_cost'] / abs(portfolio[ticker]['quantity'])
+                df.at[index, 'average_price'] = portfolio[ticker]['average_price']
 
     return portfolio, df
 
@@ -99,4 +108,3 @@ def run_manager_brokerage_notes():
     portfolio, df = calculate_PnL_averagePrices(df)
     
     return portfolio, df
-

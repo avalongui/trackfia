@@ -41,10 +41,6 @@ def fund_data(find_type='xml'):
         counter = -1
         df_xml = pd.DataFrame()
         while len(df_xml) == 0:
-            
-            if counter >= 5:
-                return None, None, None
-            
             counter+=1
             print(f'Voltando {counter} dias para obter PL...')
             date_ref = datetime.today() - timedelta(days=counter)
@@ -58,8 +54,8 @@ def fund_data(find_type='xml'):
                 print('Erro na captura do arquivo xml. O formato não é compatível...')
             
         return df_xml, data_xml, header
-
     
+
 if __name__ == "__main__":
     
     json_path = Path.home() / 'Desktop' / 'api_btg_info.json'
