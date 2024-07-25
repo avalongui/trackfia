@@ -7,8 +7,6 @@ Algumas coisas serao manuais agora nesse comeco, ate que eu me adapte melhor a e
 """
 
 import os
-import openai
-from openai import OpenAI
 from pathlib import Path
 from tqdm import tqdm
 import pandas as pd
