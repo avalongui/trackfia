@@ -222,21 +222,13 @@ def handle_data_Mainwebpage(manual_insert=[]):
         data_xml = load_pickle(data_xml_path)
         header = load_pickle(header_path)
         print('Dados carregados dos arquivos serializados.')
+    
     else:
         df_xml, data_xml, header = fund_data(find_type='xml')
-        
-        if df_xml == None: # previsa de erro na API
-            current_date = pd.to_datetime(current_date) - timedelta(days=1)
-            current_date = current_date.strftime('%Y-%m-%d')
-            df_xml_path = os.path.join(pickle_dir, f'df_xml_{current_date}.pkl')
-            data_xml_path = os.path.join(pickle_dir, f'data_xml_{current_date}.pkl')
-            header_path = os.path.join(pickle_dir, f'header_{current_date}.pkl')
-            
-        else:
-            save_pickle(df_xml, df_xml_path)
-            save_pickle(data_xml, data_xml_path)
-            save_pickle(header, header_path)
-            print('Dados capturados da API e salvos em arquivos serializados.')
+        save_pickle(df_xml, df_xml_path)
+        save_pickle(data_xml, data_xml_path)
+        save_pickle(header, header_path)
+        print('Dados capturados da API e salvos em arquivos serializados.')
             
     data_api = header['dtposicao']
     print(f'Data dos dados capturados da API: {data_api}')
