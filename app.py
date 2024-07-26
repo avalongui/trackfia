@@ -393,7 +393,17 @@ def manual_operations():
 
         # Enviar dados para a função que processa e atualiza a página manual_operations localmente
         ngrok_url = 'http://7.tcp.ngrok.io:22339'
-        response = requests.post(f'{ngrok_url}/process_manual_operations', json=manual_insert.to_dict(orient='records') if manual_insert is not None else {})
+        try:
+            app.logger.info(f"Sending request to {ngrok_url}")
+            response = requests.post(f'{ngrok_url}/process_manual_operations', json=manual_insert.to_dict(orient='records') if manual_insert is not None else {})
+            response.raise_for_status()  # Verifique se a resposta contém um status de erro
+            app.logger.info(f"Received response: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            app.logger.error(f"Request failed: {e}")
+            flash('Failed to process file', 'error')
+            return render_template('manual_operations.html')
+
+        # response = requests.post(f'{ngrok_url}/process_manual_operations', json=manual_insert.to_dict(orient='records') if manual_insert is not None else {})
 
         if response.status_code == 200:
             
