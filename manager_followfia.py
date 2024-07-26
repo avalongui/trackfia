@@ -450,12 +450,17 @@ def process_manual_operations():
 
 
 def main():
+    # Agendamento da tarefa para rodar a cada 5 minutos
     schedule.every(5).minutes.do(job)
+    
+    # Iniciar o Flask app em uma thread separada para poder rodar o loop while true simultaneamente
+    from threading import Thread
+    flask_thread = Thread(target=lambda: app.run(host="0.0.0.0", port=5000))
+    flask_thread.start()
     
     while True:
         schedule.run_pending()
         time.sleep(1)
-
 
 if __name__ == '__main__':
     main()
