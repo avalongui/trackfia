@@ -398,11 +398,18 @@ def manual_operations():
         logging.basicConfig(level=logging.DEBUG)
         ngrok_url = "http://7.tcp.ngrok.io:22339"
         logging.debug(f"Enviando solicitação para {ngrok_url}")
+        
         try:
             response = requests.post(f'{ngrok_url}/process_manual_operations', json=manual_insert.to_dict(orient='records') if manual_insert is not None else {})
             logging.debug(f"Resposta recebida: {response.status_code} - {response.text}")
-        except Exception as e:
+            if response.status_code == 200:
+                # Processar a resposta aqui
+                pass
+            else:
+                logging.error(f"Erro na resposta: {response.status_code} - {response.text}")
+        except requests.exceptions.RequestException as e:
             logging.error(f"Erro ao enviar solicitação: {e}")
+            response = None  # Definindo `response` como `None` para evitar `UnboundLocalError`
         
         # try:
         #     app.logger.info(f"Sending request to {ngrok_url}")
