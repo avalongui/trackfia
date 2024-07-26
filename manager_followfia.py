@@ -377,7 +377,11 @@ def handle_data_Mainwebpage(manual_insert=[]):
     # df_opts.set_index('Ticker', inplace=True)
     df_opts = df_opts.sort_values(by='profit_loss', ascending=False)
     df_opts.columns = ['Ticker', 'Preço Atual', 'Quantidade', 'PM', 'Valor Atual', 'PnL', 'Variação', 'Peso', 'Variação ponderada', 'Ativo Subjacente', 'Tipo', 'Vencimento', 'Strike', 'Preço Atual Ativo']
-    df_opts_table = df_opts.apply(lambda x: round(x, 2))
+    
+    numeric_cols = df_opts.select_dtypes(include=[np.number]).columns
+    df_opts[numeric_cols] = df_opts[numeric_cols].round(2)
+    
+    df_opts_table = df_opts.copy()
     df_opts_table.set_index('Ticker', inplace=True)
     
     # Converter dados para envio
