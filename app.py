@@ -1,5 +1,6 @@
 import os
 import base64
+import logging
 import requests
 import numpy as np
 import pandas as pd
@@ -392,16 +393,26 @@ def manual_operations():
                 manual_insert['data'] = manual_insert['data'].astype(str)
 
         # Enviar dados para a função que processa e atualiza a página manual_operations localmente
-        ngrok_url = 'http://7.tcp.ngrok.io:22339'
+        # ngrok_url = 'http://7.tcp.ngrok.io:22339'
+        
+        logging.basicConfig(level=logging.DEBUG)
+        ngrok_url = "http://7.tcp.ngrok.io:22339"
+        logging.debug(f"Enviando solicitação para {ngrok_url}")
         try:
-            app.logger.info(f"Sending request to {ngrok_url}")
             response = requests.post(f'{ngrok_url}/process_manual_operations', json=manual_insert.to_dict(orient='records') if manual_insert is not None else {})
-            response.raise_for_status()  # Verifique se a resposta contém um status de erro
-            app.logger.info(f"Received response: {response.status_code}")
-        except requests.exceptions.RequestException as e:
-            app.logger.error(f"Request failed: {e}")
-            flash('Failed to process file', 'error')
-            return render_template('manual_operations.html')
+            logging.debug(f"Resposta recebida: {response.status_code} - {response.text}")
+        except Exception as e:
+            logging.error(f"Erro ao enviar solicitação: {e}")
+        
+        # try:
+        #     app.logger.info(f"Sending request to {ngrok_url}")
+        #     response = requests.post(f'{ngrok_url}/process_manual_operations', json=manual_insert.to_dict(orient='records') if manual_insert is not None else {})
+        #     response.raise_for_status()  # Verifique se a resposta contém um status de erro
+        #     app.logger.info(f"Received response: {response.status_code}")
+        # except requests.exceptions.RequestException as e:
+        #     app.logger.error(f"Request failed: {e}")
+        #     flash('Failed to process file', 'error')
+        #     return render_template('manual_operations.html')
 
         # response = requests.post(f'{ngrok_url}/process_manual_operations', json=manual_insert.to_dict(orient='records') if manual_insert is not None else {})
 
