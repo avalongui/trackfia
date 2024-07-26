@@ -392,7 +392,8 @@ def manual_operations():
                 manual_insert['data'] = manual_insert['data'].astype(str)
 
         # Enviar dados para a função que processa e atualiza a página manual_operations localmente
-        response = requests.post('http://192.168.0.13:5000/process_manual_operations', json=manual_insert.to_dict(orient='records') if manual_insert is not None else {})
+        ngrok_url = 'http://7.tcp.ngrok.io:22339'
+        response = requests.post(f'{ngrok_url}/process_manual_operations', json=manual_insert.to_dict(orient='records') if manual_insert is not None else {})
 
         if response.status_code == 200:
             
